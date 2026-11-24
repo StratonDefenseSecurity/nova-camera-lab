@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <meta name="description" content="An interactive camera lab that reveals how a black-and-white pattern can turn purple in a photograph.">
+    <title>The Color That Wasn’t There</title>
+    <link rel="stylesheet" href="styles.css?v=11">
+    <script defer src="camera-model.js?v=5"></script>
+    <script defer src="camera-case.js?v=1"></script>
+    <script defer src="lab.js?v=11"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to the experiment</a>
+    <header class="masthead">
+      <span class="masthead-name"><span class="masthead-mark" aria-hidden="true">◎</span> Team Nova</span>
+      <span class="masthead-description">The Color That Wasn’t There</span>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <ol class="route" aria-label="Investigation stages">
+        <li aria-current="step">Take the shot</li>
+        <li>Open a pixel</li>
+        <li>Try another pattern</li>
+      </ol>
+      <section class="intro" id="viewfinder" aria-label="The camera mystery">
+        <div class="opening-copy">
+          <div id="opening-guess" class="opening-step">
+            <p class="camera-voice">Hey, come closer.</p>
+            <h1 id="project-title" tabindex="-1">Can a camera find color <em>in gray fabric?</em></h1>
+            <p>You'll discover how your phone builds the colors in a photo. Pick a guess to take the shot.</p>
+            <div class="opening-choices" role="group" aria-label="Predict what the photo will show">
+              <button class="primary-button" type="button" data-first-guess="gray">It’ll stay gray</button>
+              <button class="quiet-button" type="button" data-first-guess="color">Color will show up</button>
+            </div>
+          </div>
+          <div id="opening-shot" class="opening-step" hidden>
+            <p class="camera-voice" id="shot-reaction"></p>
+            <h2 id="shot-question" tabindex="-1" aria-describedby="shot-reaction">What if we turn the fabric?</h2>
+            <p>Slide between the gray fabric and the photo. Then predict what a new angle will do to the purple.</p>
+            <div class="opening-choices" role="group" aria-label="Predict what happens to the purple">
+              <button class="primary-button" type="button" data-opening-retake="fade">Purple will fade</button>
+              <button class="quiet-button" type="button" data-opening-retake="stay">Purple will stay</button>
+            </div>
+          </div>
+          <div id="opening-retake" class="opening-step" hidden>
+            <p class="camera-voice" id="retake-reaction"></p>
+            <h2 id="retake-question" tabindex="-1" aria-describedby="retake-reaction opening-result">Where did the purple come from?</h2>
+            <p id="opening-result"></p>
+            <button id="open-pixel" class="primary-button" type="button" aria-controls="fabric-lab">Open a purple pixel <span aria-hidden="true">↗</span></button>
+          </div>
+        </div>
+        <div class="viewfinder-display">
+          <figure class="viewfinder-photo" aria-labelledby="viewfinder-caption">
+            <canvas id="live-viewfinder" width="384" height="384" role="img" aria-label="Simulated gray fabric with no color"></canvas>
+            <span id="viewfinder-cross" class="viewfinder-cross" aria-hidden="true"></span>
+            <figcaption id="viewfinder-caption"><span id="viewfinder-state">Live view</span><span id="viewfinder-angle">Gray fabric · 43°</span></figcaption>
+          </figure>
+          <div class="viewfinder-compare" id="viewfinder-compare" hidden>
+            <button class="quiet-button" type="button" data-comparison-endpoint="0">Gray fabric</button>
+            <input type="range" id="shot-divider" min="0" max="100" step="1" value="55" aria-label="Compare gray fabric with the camera photo" aria-controls="live-viewfinder">
+            <button class="quiet-button" type="button" data-comparison-endpoint="100">Camera photo</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="experiment" id="fabric-lab" aria-labelledby="experiment-title" hidden>
+        <div class="experiment-heading">
+          <div>
+            <h2 id="experiment-title" tabindex="-1">Where did the purple come from?</h2>
+            <p>The first camera shot shows a color the gray fabric never had.</p>
+          </div>
+          <button type="button" id="back-to-viewfinder" class="quiet-button back-to-viewfinder">Back to camera</button>
+        </div>
+
+        <div class="frames experiment-frames">
+          <figure class="frame">
+            <figcaption><span>Original fabric</span><span class="frame-note">Grayscale</span></figcaption>
+            <canvas id="original" width="384" height="384" role="img" aria-label="Simulated fabric with a black-and-white pattern"></canvas>
+          </figure>
+          <figure class="frame">
+            <figcaption><span>Camera photo</span><span class="frame-note">Bayer simulation</span></figcaption>
+            <div class="photo-frame">
+              <canvas id="photo" width="64" height="64" tabindex="0" role="img" aria-label="Simulated reconstructed photo" aria-describedby="pixel-instructions"></canvas>
+              <canvas id="focus-marker" width="64" height="64" aria-hidden="true"></canvas>
+            </div>
+          </figure>
+          <section id="inspector" class="inspector" aria-labelledby="inspector-title" hidden>
+            <h3 id="inspector-title" tabindex="-1">Can you rebuild this pixel?</h3>
+            <details class="camera-hint">
+              <summary>Ask the camera for a hint</summary>
+              <p>Start with the channel the sensor measured. Add each missing channel to see which nearby sensor points supplied its value.</p>
+            </details>
+            <dl class="measurement-summary">
+              <div class="measurement"><dt>Sensor measured</dt><dd id="measured-value"></dd></div>
+              <div class="measurement"><dt>Camera estimated</dt><dd id="estimated-values"></dd></div>
+            </dl>
+            <div class="pixel-mixes" aria-hidden="true">
+              <div><canvas class="pixel-preview" id="your-pixel" width="1" height="1"></canvas><span>Your mix</span></div>
+              <div><canvas class="pixel-preview" id="pixel-preview" width="1" height="1"></canvas><span>Photo pixel</span></div>
+            </div>
+            <div class="add-estimates" role="group" aria-label="Add or remove a camera estimate">
+              <button type="button" class="quiet-button" data-estimate aria-pressed="false"></button>
+              <button type="button" class="quiet-button" data-estimate aria-pressed="false"></button>
+            </div>
+            <p id="build-feedback" class="caption" role="status"></p>
+            <button id="answer-case" type="button" class="quiet-button answer-case" hidden>Give your verdict</button>
+            <div id="estimate-evidence" class="estimate-evidence" hidden>
+              <p id="estimate-origin"></p>
+              <ul id="estimate-readings" class="estimate-readings" aria-labelledby="estimate-origin"></ul>
+            </div>
+          </section>
+        </div>
+
+        <div class="shot-tools">
+          <div class="case-progress" aria-label="Mystery progress">
+            <ol class="case-clues" aria-label="Evidence to collect">
+              <li data-case-clue="retake">Retake<span class="sr-only">: to find</span></li>
+              <li data-case-clue="pixel">Pixel<span class="sr-only">: to find</span></li>
+              <li data-case-clue="explanation">Verdict<span class="sr-only">: to find</span></li>
+            </ol>
+            <span id="case-count">0 of 3 clues</span>
+          </div>
+          <div class="purple-readout" title="The strongest purple signal near the center, measured as the smaller of red and blue minus green.">
+            <div><span>Purple intensity</span><output id="purple-output" for="rotation spacing">—</output></div>
+            <meter id="purple-meter" aria-label="Purple intensity" min="0" max="100" value="0"></meter>
+          </div>
+        </div>
+
+        <div id="prediction" class="prediction">
+          <p id="prediction-question">Turn the same fabric. Will the purple fade or stay?</p>
+          <div class="prediction-choices" role="group" aria-labelledby="prediction-question">
+            <button class="quiet-button" type="button" data-prediction="fade" aria-pressed="false">It will fade</button>
+            <button class="quiet-button" type="button" data-prediction="stay" aria-pressed="false">It will stay</button>
+          </div>
+        </div>
+
+        <div id="retake-reveal" class="retake-reveal" hidden>
+          <strong>Clue found · The photo changed</strong>
+          <p id="prediction-feedback" role="status"></p>
+          <button id="follow-clue" type="button" class="primary-button">Find the source of the purple</button>
+        </div>
+
+        <details id="camera-settings" class="camera-settings">
+          <summary>Explore camera settings</summary>
+          <div class="control-row">
+          <div class="slider-control">
+            <div class="control-label">
+              <label for="rotation">Fabric angle</label>
+              <output id="angle-output" for="rotation">43°</output>
+            </div>
+            <input type="range" id="rotation" min="0" max="90" step="1" value="43">
+          </div>
+          <div class="slider-control spacing-control">
+            <div class="control-label">
+              <label for="spacing">Stripe spacing</label>
+              <output id="spacing-output" for="spacing">1.42 px</output>
+            </div>
+            <input type="range" id="spacing" min="1.1" max="6" step="0.01" value="1.42">
+          </div>
+          <button type="button" id="reset" class="quiet-button">Reset</button>
+          </div>
+        </details>
+
+        <div id="start-inspection" class="next-step">
+          <p id="challenge-feedback" role="status">Tap the photo to explore a pixel.</p>
+          <button type="button" id="inspect-purple" class="primary-button" aria-controls="inspector" aria-expanded="false">Inspect a purple pixel</button>
+        </div>
+        <p id="pixel-instructions" class="sr-only">Select a pixel in the photo to inspect it. With the photo focused, use the arrow keys to move the selection.</p>
+        <div id="inspection-followup" class="inspection-followup" hidden>
+          <p id="pixel-explanation" class="caption"></p>
+          <section id="understanding-check" class="understanding-check" aria-labelledby="check-title" hidden>
+            <h3 id="check-title" tabindex="-1">What’s your verdict?</h3>
+            <p class="check-prompt">How did the camera build that color?</p>
+            <div class="check-choices" role="group" aria-labelledby="check-title">
+              <button type="button" class="quiet-button" data-answer="measured">The sensor measured all three channels.</button>
+              <button type="button" class="quiet-button" data-answer="estimated">The sensor measured one channel and the software estimated two.</button>
+              <button type="button" class="quiet-button" data-answer="scene">Turning the fabric changed its actual color.</button>
+            </div>
+            <p id="check-feedback" class="caption" role="status"></p>
+            <div id="case-verdict" class="case-verdict" hidden>
+              <strong>Case solved · You traced the color</strong>
+              <p>The fabric stayed gray. The camera had one reading at that pixel and filled in two values using other sensor points.</p>
+              <a class="mesh-link" href="#mesh-title">Try another pattern</a>
+              <details class="case-questions">
+                <summary>Ask the lab another question</summary>
+                <div class="case-question-buttons" role="group" aria-label="Questions about the camera">
+                  <button type="button" class="quiet-button" data-lab-question="sample">What did my sensor measure?</button>
+                  <button type="button" class="quiet-button" data-lab-question="angle">Why did the angle matter?</button>
+                  <button type="button" class="quiet-button" data-lab-question="software">Can software fix it?</button>
+                </div>
+                <p id="lab-answer" role="status"></p>
+              </details>
+            </div>
+          </section>
+          <details id="pixel-trace" class="pixel-trace">
+            <summary>Follow the sensor readings</summary>
+            <div class="inspector-grid">
+              <div>
+                <h3>Color channels</h3>
+                <div id="channels" class="channels" role="group" aria-label="Color channels for the selected pixel"></div>
+                <p class="channel-detail" id="channel-detail" aria-live="polite"></p>
+              </div>
+              <div>
+                <h3>Samples around this pixel</h3>
+                <div id="sensor-grid" class="sensor-grid" role="group" aria-label="Three-by-three sensor neighborhood"></div>
+                <p class="caption">Outlined cells contributed to the selected value.</p>
+              </div>
+            </div>
+          </details>
+          <button id="go-compare" type="button" class="quiet-button">Try another reconstruction</button>
+        </div>
+      </section>
+
+      <details id="comparison" class="comparison" hidden>
+        <summary><span><strong>Can you fix the photo?</strong><small>Try two ways to reconstruct the same sensor reading.</small></span></summary>
+        <div class="comparison-body">
+          <div class="preset-row" role="group" aria-label="Comparison examples">
+            <button type="button" id="wider-stripes" class="quiet-button" aria-pressed="false">Try wider stripes</button>
+            <button type="button" id="fine-stripes" class="quiet-button" aria-pressed="false">Try very fine stripes</button>
+            <a href="#experiment-title">Adjust the fabric</a>
+          </div>
+          <p class="capture-info" id="capture-info"></p>
+          <div class="frames comparison-frames">
+            <figure class="frame">
+              <figcaption><span>Bilinear interpolation</span><span class="frame-note">Nearby averages</span></figcaption>
+              <canvas id="compare-bilinear" width="64" height="64" role="img" aria-label="Photo reconstructed with bilinear interpolation"></canvas>
+              <dl class="scores"><div><dt>False color</dt><dd id="bilinear-color"></dd></div><div><dt>Brightness error</dt><dd id="bilinear-brightness"></dd></div></dl>
+            </figure>
+            <figure class="frame">
+              <figcaption><span>Malvar–He–Cutler</span><span class="frame-note">Cross-channel correction</span></figcaption>
+              <canvas id="compare-malvar" width="64" height="64" role="img" aria-label="Photo reconstructed with the Malvar–He–Cutler method"></canvas>
+              <dl class="scores"><div><dt>False color</dt><dd id="malvar-color"></dd></div><div><dt>Brightness error</dt><dd id="malvar-brightness"></dd></div></dl>
+            </figure>
+          </div>
+          <p id="comparison-result" class="comparison-result" aria-live="polite"></p>
+          <details class="method-note">
+            <summary>How are the scores calculated?</summary>
+            <p>False color is the average gap between the largest and smallest RGB channel values. The original is grayscale, so the ideal gap is zero. Brightness error is the root mean square difference between the reconstructed mean RGB value and the original gray value. Lower is better for both scores. The calculation skips the two-pixel border, where both methods use the same reconstruction.</p>
+          </details>
+          <a class="mesh-link" href="#mesh-title">Try it on a window screen</a>
+        </div>
+      </details>
+
+      <section id="mesh" class="transfer" aria-labelledby="mesh-title" hidden>
+        <h2 id="mesh-title" tabindex="-1">Bonus case: The window screen</h2>
+        <p>The mesh is gray. Pick one thing you would change before taking another photo.</p>
+        <div class="frames mesh-frames">
+          <figure class="frame">
+            <figcaption><span>Original mesh</span><span class="frame-note">Grayscale</span></figcaption>
+            <canvas id="mesh-original" width="252" height="252" role="img" aria-label="Gray window mesh"></canvas>
+          </figure>
+          <figure class="frame">
+            <figcaption><span>Simulated photo</span><span id="mesh-settings" class="frame-note">Original shot</span></figcaption>
+            <canvas id="mesh-photo" width="64" height="64" role="img" aria-label="Reconstruction of the window mesh"></canvas>
+          </figure>
+        </div>
+        <div class="preset-row" role="group" aria-label="Window screen camera position">
+          <button id="mesh-angle" type="button" class="quiet-button" aria-pressed="false">Change the angle</button>
+          <button id="mesh-distance" type="button" class="quiet-button" aria-pressed="false">Move closer</button>
+        </div>
+        <p id="mesh-feedback" class="comparison-result" role="status">Try a different shot and see what happens to the false color.</p>
+      </section>
+
+      <noscript><p class="takeaway">Turn on JavaScript to run the camera experiment.</p></noscript>
+    </main>
+    <footer><span>Team Nova · Global Virtual Hackathon</span><span>Simulated Bayer sensor · Calculated in your browser</span></footer>
+  </body>
+</html>
