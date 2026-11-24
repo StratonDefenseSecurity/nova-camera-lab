@@ -11,7 +11,7 @@ For a deeper look, compare bilinear interpolation with Malvar–He–Cutler reco
 
 ## Suggested one-minute demo
 
-Start on the live URL in a fresh tab. Record the actual interaction and speak over it in English. Keep the photo and the pixel builder readable. Confirm the allowed format and duration in the Round 1 form before exporting.
+Start on the live URL in a fresh tab. Record the actual interaction and speak over it in English. Keep the photo and the pixel builder readable. The Round 1 form accepts MP4 (H.264) or WebM under 100 MB. This script targets 60 seconds.
 
 | Time | On screen | English narration |
 | --- | --- | --- |
@@ -27,8 +27,15 @@ Start on the live URL in a fresh tab. Record the actual interaction and speak ov
 | Project name | The Color That Wasn’t There |
 | Live project | https://stratondefensesecurity.github.io/nova-camera-lab/ |
 | Public source repository | https://github.com/StratonDefenseSecurity/nova-camera-lab |
-| Written project page | Use the project page text above. |
-| Demo video | Record the walkthrough above, then add the video in the format shown in the Round 1 form. |
+| Tech used | HTML, CSS, vanilla JavaScript, Canvas 2D and GitHub Pages. Node.js runs the automated model tests. |
+| What your project is about | Use the project page text above. |
+| Who is it for? | Anyone who takes photos with a phone and wants to understand what happens between the sensor and the picture, especially first-time visitors with no background in imaging. |
+| One-line summary | Take a photo of gray fabric, find the purple the camera created, and rebuild a pixel to see how phone cameras estimate color. |
+| How it works | A simulated Bayer sensor samples one color channel per sensor point. The code estimates the other two from nearby readings, renders the RGB photo, and shows the samples behind a selected pixel. |
+| Why it matters | A photo is an interpretation of sensor readings. Seeing how a fine gray pattern gains false color explains why changing angle or distance can change the artifact. |
+| Source ZIP | Attach Nova-source.zip. The form allows source only, up to 20 MB. |
+| Demo video | Record the walkthrough above and attach an MP4 (H.264) or WebM under 100 MB. |
+| Live finalist availability | Lima, Peru (UTC−5). Choose only times the team can attend together. |
 
 ## Defence practice
 
